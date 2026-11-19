@@ -138,7 +138,7 @@ export default function HomePage() {
             <div>
               <h4 className="font-bold text-slate-900 dark:text-white">Life-Threatening Crises</h4>
               <p className="text-slate-600 dark:text-slate-400 mt-1">
-                ReliefLink supplements official services during overload. For immediate life danger, call 911 or local emergency services without delay.
+                ReliefLink supplements official services during crisis overload. For immediate life danger, call 907 (Ambulance), 991 (Police), or 939 (Disaster Commission) without delay.
               </p>
             </div>
           </div>

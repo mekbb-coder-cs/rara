@@ -26,30 +26,30 @@ interface ShelterPoint {
 const EMERGENCY_SHELTERS: ShelterPoint[] = [
   {
     id: 'sh-1',
-    name: 'Red Cross Relief Station #1',
-    type: 'SHELTER',
-    capacity: '150 beds available',
-    latitude: 25.7650,
-    longitude: -80.1990,
-    address: 'Civic Community Pavilion, Sector A',
+    name: 'Mekelle Ayder Emergency Relief Hub',
+    type: 'AID_STATION',
+    capacity: 'Comprehensive medical triage & clean water distribution',
+    latitude: 13.4967,
+    longitude: 39.4753,
+    address: 'Ayder Referral Hospital Campus, Mekelle, Tigray',
   },
   {
     id: 'sh-2',
-    name: 'Metropolitan Clean Water & Food Depot',
-    type: 'AID_STATION',
-    capacity: 'Supplies for 500 families',
-    latitude: 25.7580,
-    longitude: -80.2050,
-    address: 'High School Gymnasium, Distribution Hub',
+    name: 'Shire Suhul Humanitarian Relief & Food Depot',
+    type: 'SHELTER',
+    capacity: 'Shelter & emergency rations for 800 displaced families',
+    latitude: 14.1030,
+    longitude: 38.2840,
+    address: 'Suhul Hospital & Stadium Complex, Shire, Tigray',
   },
   {
     id: 'sh-3',
-    name: 'Field Medical Triage Center',
+    name: 'Adigrat Red Cross First Aid & Shelter Post',
     type: 'AID_STATION',
-    capacity: 'First aid and emergency prescriptions',
-    latitude: 25.7720,
-    longitude: -80.1880,
-    address: 'Central Sports Complex, West Wing',
+    capacity: 'First aid, pediatric medicine, clean water distribution',
+    latitude: 14.2750,
+    longitude: 39.4600,
+    address: 'Central Red Cross Station, Adigrat, Tigray',
   },
 ];
 
@@ -103,10 +103,10 @@ export function CrisisMap() {
       if (!isMounted || !mapContainerRef.current) return;
 
       if (!mapInstanceRef.current) {
-        // Default center around incident area (e.g. Miami coords from seeds)
+        // Default center around Tigray, Ethiopia (Mekelle: 13.4967, 39.4753)
         const map = L.map(mapContainerRef.current, {
-          center: [25.7617, -80.1918],
-          zoom: 12,
+          center: [13.4967, 39.4753],
+          zoom: 8,
           scrollWheelZoom: true,
         });
 

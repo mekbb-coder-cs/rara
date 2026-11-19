@@ -152,14 +152,19 @@ export function Header() {
           </div>
 
           {/* Language Switcher */}
-          <button
-            onClick={() => setLocale(locale === 'en' ? 'ar' : 'en')}
-            className="p-2 rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 touch-target flex items-center gap-1 text-xs font-bold"
-            aria-label={`Switch to ${locale === 'en' ? 'Arabic' : 'English'}`}
-          >
-            <Globe className="w-4 h-4" aria-hidden="true" />
-            <span>{locale === 'en' ? 'العربية' : 'EN'}</span>
-          </button>
+          <div className="relative inline-flex items-center">
+            <Globe className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 absolute left-2 pointer-events-none" aria-hidden="true" />
+            <select
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as any)}
+              className="pl-6 pr-2 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              aria-label="Select Language"
+            >
+              <option value="en">English</option>
+              <option value="ti">ትግርኛ</option>
+              <option value="am">አማርኛ</option>
+            </select>
+          </div>
 
           {/* Dark Mode Switcher */}
           <button

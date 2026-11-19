@@ -21,9 +21,9 @@ export function EmergencyBanner() {
           </p>
         </div>
         <a
-          href="tel:911"
+          href="tel:907"
           className="inline-flex items-center justify-center gap-2 bg-white text-red-800 hover:bg-red-50 font-bold px-4 py-2 rounded-lg text-sm shadow transition-colors touch-target flex-shrink-0 border border-white"
-          aria-label="Call emergency services 911"
+          aria-label="Call emergency services 907 or 991"
         >
           <PhoneCall className="w-4 h-4 text-red-800" aria-hidden="true" />
           <span>{t('emergency.call911')}</span>

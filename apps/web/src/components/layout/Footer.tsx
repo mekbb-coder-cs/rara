@@ -22,7 +22,7 @@ export function Footer() {
 
         <div className="text-center md:text-end text-xs space-y-1">
           <p>
-            Emergency? Always call <strong>911</strong> or your local emergency services first.
+            Emergency? Always call <strong>907 (Ambulance)</strong> or <strong>991 (Police)</strong> first.
           </p>
           <p className="flex items-center justify-center md:justify-end gap-1 text-slate-500">
             <span>Built with care for crisis survivors & responders</span>

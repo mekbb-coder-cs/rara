@@ -18,12 +18,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check localStorage preference if available
     const saved = localStorage.getItem('relieflink_locale') as Locale;
-    if (saved === 'en' || saved === 'ar') {
+    if (saved === 'en' || saved === 'ti' || saved === 'am') {
       setLocaleState(saved);
     }
   }, []);
 
-  const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const dir: 'ltr' = 'ltr';
 
   useEffect(() => {
     if (typeof document !== 'undefined') {

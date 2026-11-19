@@ -184,7 +184,7 @@ export default function ResponderPage() {
               </h1>
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-red-400" /> Jurisdiction: Assigned Regions
+                  <MapPin className="w-3 h-3 text-red-400" /> Jurisdiction: Tigray Region (Mekelle, Shire, Adigrat, Axum)
                 </span>
                 <span>•</span>
                 <span className="font-semibold text-slate-300">

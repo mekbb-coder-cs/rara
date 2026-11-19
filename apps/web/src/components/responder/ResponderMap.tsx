@@ -28,10 +28,10 @@ export function ResponderMap({
       if (!isMounted || !mapContainerRef.current) return;
 
       if (!mapInstanceRef.current) {
-        // Center around default region (Miami seeds: 25.7617, -80.1918)
+        // Center around Tigray Region, Ethiopia (Mekelle: 13.4967, 39.4753)
         const map = L.map(mapContainerRef.current, {
-          center: [25.7617, -80.1918],
-          zoom: 12,
+          center: [13.4967, 39.4753],
+          zoom: 8,
           scrollWheelZoom: true,
         });
 
