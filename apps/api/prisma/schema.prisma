@@ -1,0 +1,723 @@
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum Role {
+  REPORTER
+  RESPONDER
+  AID_PROVIDER
+  COORDINATOR
+  ADMIN
+}
+
+enum ReportStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+  PRIORITIZED
+  MATCHED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum HazardType {
+  FLOOD
+  FIRE
+  MEDICAL
+  MISSING_PERSON
+  FOOD_WATER
+  SHELTER
+  ROAD_BLOCKED
+  STRUCTURE_COLLAPSE
+  HAZMAT
+  UTILITY_FAILURE
+  OTHER
+}
+
+enum UrgencyLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+  LIFE_THREATENING
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  CONFIRMED
+  DISPUTED
+  FABRICATED
+}
+
+enum VerificationMethod {
+  PHONE_CALL
+  ON_SITE_VISIT
+  OFFICIAL_AGENCY
+  PHOTO_METADATA
+  CROSS_REPORT_CORROBORATION
+}
+
+enum AidType {
+  FOOD_WATER
+  MEDICAL_SUPPLIES
+  SHELTER_BEDDING
+  SEARCH_AND_RESCUE
+  EVACUATION_TRANSPORT
+  EQUIPMENT_TOOLS
+  HYGIENE_KIT
+  PERSONNEL_VOLUNTEER
+}
+
+enum AidStatus {
+  AVAILABLE
+  COMMITTED
+  DEPLETED
+  EXPIRED
+  SUSPENDED
+}
+
+enum NeedUrgency {
+  IMMEDIATE
+  URGENT
+  STANDARD
+  FLEXIBLE
+}
+
+enum MatchStatus {
+  PROPOSED
+  ACCEPTED_BY_RESPONDER
+  DISPATCHED
+  FULFILLED
+  CANCELLED
+  REJECTED
+}
+
+enum TaskStatus {
+  PENDING
+  ASSIGNED
+  EN_ROUTE
+  ON_SCENE
+  COMPLETED
+  ABORTED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  WEB_PUSH
+  IN_APP
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum AuditAction {
+  READ_PII
+  CREATE_REPORT
+  UPDATE_REPORT_STATUS
+  VERIFY_REPORT
+  MATCH_AID
+  DISPATCH_TASK
+  EXPORT_DATA
+  USER_ROLE_CHANGE
+  FLAG_ABUSE
+  SETTINGS_UPDATE
+  APPROVE_ORGANIZATION
+  REJECT_ORGANIZATION
+  AUTH_LOGIN
+  AUTH_LOGOUT
+  AUTH_REFRESH_REUSE_DETECTED
+}
+
+enum AbuseFlagReason {
+  SPAM
+  FALSE_REPORT
+  DUPLICATE
+  OFFENSIVE
+  MALICIOUS
+  OTHER
+}
+
+enum AbuseStatus {
+  PENDING_REVIEW
+  DISMISSED
+  CONFIRMED_ABUSE
+}
+
+enum OrgType {
+  GOVERNMENT_EMERGENCY
+  NGO
+  VOLUNTEER_GROUP
+  CORPORATE_DONOR
+  HOSPITAL_CLINIC
+}
+
+enum MemberRole {
+  OWNER
+  MANAGER
+  MEMBER
+  DISPATCHER
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+// ==========================================
+// MODELS
+// ==========================================
+
+model User {
+  id                    String                @id @default(uuid())
+  email                 String?               @unique
+  phoneNumber           String?               @unique
+  passwordHash          String?
+  fullName              String?
+  role                  Role                  @default(REPORTER)
+  isVerifiedResponder   Boolean               @default(false)
+  isEmailVerified       Boolean               @default(false)
+  badgeNumber           String?
+  lastActiveAt          DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  deletedAt             DateTime?
+
+  // Relations
+  reportsSubmitted      Report[]              @relation("ReporterUser")
+  verificationsGiven    ReportVerification[]  @relation("VerifierUser")
+  statusUpdates         ReportUpdate[]        @relation("UserUpdates")
+  aidOffers             AidOffer[]            @relation("UserAidOffers")
+  orgMemberships        OrganizationMember[]
+  userRegions           UserRegion[]
+  taskAssignments       TaskAssignment[]      @relation("AssignedUser")
+  tasksCreated          Task[]                @relation("TaskCreator")
+  auditLogs             AuditLog[]            @relation("AuditedUser")
+  assignedReports       Report[]              @relation("AssignedResponder")
+  lockedReports         Report[]              @relation("ReportLockedBy")
+  notifications         Notification[]
+  refreshTokens         RefreshToken[]
+  verificationTokens    VerificationToken[]
+  abuseFlagsReported    AbuseFlag[]           @relation("FlagReporter")
+  abuseFlagsReviewed    AbuseFlag[]           @relation("FlagReviewer")
+
+  @@index([role])
+  @@index([isVerifiedResponder])
+  @@index([phoneNumber])
+}
+
+model RefreshToken {
+  id                  String    @id @default(uuid())
+  tokenHash           String    @unique
+  familyId            String
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isRevoked           Boolean   @default(false)
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedByTokenHash String?
+  ipAddress           String?
+  userAgent           String?
+  createdAt           DateTime  @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+}
+
+model VerificationToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  type      TokenType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model Organization {
+  id             String                 @id @default(uuid())
+  name           String
+  legalName      String?
+  type           OrgType                @default(NGO)
+  registrationNo String?                @unique
+  isVerified     Boolean                @default(false)
+  verifiedAt     DateTime?
+  rejectedAt     DateTime?
+  rejectionReason String?
+  contactEmail   String
+  contactPhone   String
+  website        String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  deletedAt      DateTime?
+
+  // Relations
+  members        OrganizationMember[]
+  documents      OrganizationDocument[]
+  aidOffers      AidOffer[]
+  resources      Resource[]
+  tasks          Task[]
+
+  @@index([type])
+  @@index([isVerified])
+}
+
+model OrganizationDocument {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documentType   String       @default("VERIFICATION_DOCUMENT")
+  fileUrl        String
+  uploadedAt     DateTime     @default(now())
+
+  @@index([organizationId])
+}
+
+model OrganizationMember {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memberRole     MemberRole   @default(MEMBER)
+  joinedAt       DateTime     @default(now())
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model Region {
+  id          String                                  @id @default(uuid())
+  code        String                                  @unique
+  name        String
+  country     String
+  state       String?
+  boundary    Unsupported("geography(Polygon, 4326)")?
+  centerLat   Float
+  centerLng   Float
+  isActive    Boolean                                 @default(true)
+  createdAt   DateTime                                @default(now())
+  updatedAt   DateTime                                @updatedAt
+
+  // Relations
+  userRegions UserRegion[]
+  reports     Report[]
+  aidOffers   AidOffer[]
+  resources   Resource[]
+
+  @@index([isActive])
+}
+
+model UserRegion {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  regionId   String
+  region     Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@unique([userId, regionId])
+  @@index([userId])
+  @@index([regionId])
+}
+
+model Report {
+  id                    String                                @id @default(uuid())
+  trackingCode          String                                @unique
+  title                 String
+  description           String
+  hazardType            HazardType
+  status                ReportStatus                          @default(SUBMITTED)
+  initialUrgency        UrgencyLevel                          @default(MEDIUM)
+  
+  // Geolocation
+  latitude              Float
+  longitude             Float
+  location              Unsupported("geography(Point, 4326)")?
+  approximateLocation   String
+  exactAddressEncrypted String?
+  
+  // Incident details
+  peopleAffectedCount   Int                                   @default(1)
+  hasInjured            Boolean                               @default(false)
+  hasTrapped            Boolean                               @default(false)
+  hasVulnerable         Boolean                               @default(false)
+  vulnerabilityDetails  String?
+  
+  // Reporter details
+  isAnonymous           Boolean                               @default(false)
+  reporterId            String?
+  reporter              User?                                 @relation("ReporterUser", fields: [reporterId], references: [id], onDelete: SetNull)
+  reporterName          String?
+  reporterPhoneEncrypted String?
+  reporterIpHash        String?
+
+  // Clustering & Verification
+  regionId              String?
+  region                Region?                               @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  duplicateClusterId    String?
+  duplicateCluster      DuplicateCluster?                     @relation(fields: [duplicateClusterId], references: [id], onDelete: SetNull)
+  isMasterInCluster     Boolean                               @default(false)
+  
+  // Idempotency, Offline & Abuse Protection
+  idempotencyKey        String?                               @unique
+  offlineCreatedAt      DateTime?
+  vulnerableGroups      String[]                              @default([])
+  isHoneypotTriggered   Boolean                               @default(false)
+
+  // Optimistic Locking & Active Lock Concurrency
+  version               Int                                   @default(1)
+  assignedResponderId   String?
+  assignedResponder     User?                                 @relation("AssignedResponder", fields: [assignedResponderId], references: [id], onDelete: SetNull)
+  lockedById            String?
+  lockedBy              User?                                 @relation("ReportLockedBy", fields: [lockedById], references: [id], onDelete: SetNull)
+  lockedAt              DateTime?
+  manualOverrideScore   Float?
+  manualOverrideReason  String?
+
+  createdAt             DateTime                              @default(now())
+  updatedAt             DateTime                              @updatedAt
+  deletedAt             DateTime?
+
+  // Relations
+  media                 ReportMedia[]
+  updates               ReportUpdate[]
+  verifications         ReportVerification[]
+  priorityScore         PriorityScore?
+  needs                 AidNeed[]
+  tasks                 Task[]
+  abuseFlags            AbuseFlag[]
+
+  @@index([status])
+  @@index([hazardType])
+  @@index([initialUrgency])
+  @@index([createdAt])
+  @@index([regionId])
+  @@index([duplicateClusterId])
+  @@index([reporterIpHash])
+}
+
+model ReportMedia {
+  id              String   @id @default(uuid())
+  reportId        String
+  report          Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  storageKey      String
+  fileUrl         String
+  mimeType        String
+  fileSizeBytes   Int
+  isSensitive     Boolean  @default(false)
+  exifStripped    Boolean  @default(true)
+  uploadedAt      DateTime @default(now())
+
+  @@index([reportId])
+}
+
+model ReportUpdate {
+  id             String        @id @default(uuid())
+  reportId       String
+  report         Report        @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  authorId       String?
+  author         User?         @relation("UserUpdates", fields: [authorId], references: [id], onDelete: SetNull)
+  previousStatus ReportStatus?
+  newStatus      ReportStatus?
+  note           String
+  isPublic       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+
+  @@index([reportId])
+  @@index([isPublic])
+}
+
+model ReportVerification {
+  id           String              @id @default(uuid())
+  reportId     String
+  report       Report              @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  verifiedById String
+  verifiedBy   User                @relation("VerifierUser", fields: [verifiedById], references: [id], onDelete: Restrict)
+  status       VerificationStatus  @default(PENDING)
+  method       VerificationMethod
+  notes        String
+  confidence   Float               @default(1.0)
+  verifiedAt   DateTime            @default(now())
+
+  @@index([reportId])
+  @@index([verifiedById])
+  @@index([status])
+}
+
+model DuplicateCluster {
+  id                 String    @id @default(uuid())
+  masterReportId     String?   @unique
+  radiusMeters       Float     @default(500.0)
+  corroborationCount Int       @default(1)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  reports        Report[]
+
+  @@index([createdAt])
+}
+
+model PriorityScore {
+  id                     String    @id @default(uuid())
+  reportId               String    @unique
+  report                 Report    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  
+  compositeScore         Float
+  severityScore          Float
+  peopleAffectedScore    Float
+  vulnerabilityScore     Float
+  waitingTimeScore       Float
+  verificationMultiplier Float
+  hazardWeight           Float
+  
+  calculationBreakdown   Json
+  calculatedAt           DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@index([compositeScore(sort: Desc)])
+}
+
+model AidNeed {
+  id               String      @id @default(uuid())
+  reportId         String
+  report           Report      @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  aidType          AidType
+  quantityRequired Int         @default(1)
+  unit             String
+  urgency          NeedUrgency @default(URGENT)
+  notes            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  matches          Match[]
+
+  @@index([reportId])
+  @@index([aidType])
+  @@index([urgency])
+}
+
+model AidOffer {
+  id                String                                @id @default(uuid())
+  organizationId    String?
+  organization      Organization?                         @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  userId            String?
+  user              User?                                 @relation("UserAidOffers", fields: [userId], references: [id], onDelete: SetNull)
+  aidType           AidType
+  title             String
+  description       String?
+  capacityTotal     Int
+  capacityRemaining Int
+  unit              String
+  status            AidStatus                             @default(AVAILABLE)
+  
+  latitude          Float
+  longitude         Float
+  location          Unsupported("geography(Point, 4326)")?
+  serviceRadiusKm   Float                                 @default(25.0)
+  regionId          String?
+  region            Region?                               @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  
+  availableFrom     DateTime                              @default(now())
+  availableUntil    DateTime?
+  createdAt         DateTime                              @default(now())
+  updatedAt         DateTime                              @updatedAt
+
+  matches           Match[]
+  resources         Resource[]
+
+  @@index([aidType])
+  @@index([status])
+  @@index([regionId])
+}
+
+model Resource {
+  id             String                                @id @default(uuid())
+  organizationId String
+  organization   Organization                          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  aidOfferId     String?
+  aidOffer       AidOffer?                             @relation(fields: [aidOfferId], references: [id], onDelete: SetNull)
+  name           String
+  category       AidType
+  quantity       Int
+  unit           String
+  latitude       Float
+  longitude      Float
+  location       Unsupported("geography(Point, 4326)")?
+  regionId       String?
+  region         Region?                               @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  isDeployable   Boolean                               @default(true)
+  createdAt      DateTime                              @default(now())
+  updatedAt      DateTime                              @updatedAt
+
+  @@index([organizationId])
+  @@index([category])
+  @@index([isDeployable])
+}
+
+model Match {
+  id                  String       @id @default(uuid())
+  needId              String
+  need                AidNeed      @relation(fields: [needId], references: [id], onDelete: Cascade)
+  offerId             String
+  offer               AidOffer     @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  matchedQuantity     Int
+  compatibilityScore  Float
+  distanceMeters      Float
+  estimatedTravelMins Float?
+  status              MatchStatus  @default(PROPOSED)
+  scoreBreakdown      Json
+  
+  proposedAt          DateTime     @default(now())
+  confirmedAt         DateTime?
+  fulfilledAt         DateTime?
+  cancelledAt         DateTime?
+
+  tasks               Task[]
+
+  @@index([needId])
+  @@index([offerId])
+  @@index([status])
+  @@index([compatibilityScore(sort: Desc)])
+}
+
+model Task {
+  id             String           @id @default(uuid())
+  reportId       String
+  report         Report           @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  matchId        String?
+  match          Match?           @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization?    @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdById    String
+  createdBy      User             @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  
+  title          String
+  description    String
+  priority       TaskPriority     @default(MEDIUM)
+  status         TaskStatus       @default(PENDING)
+  deadline       DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  assignments    TaskAssignment[]
+
+  @@index([reportId])
+  @@index([status])
+  @@index([priority])
+  @@index([organizationId])
+}
+
+model TaskAssignment {
+  id          String    @id @default(uuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation("AssignedUser", fields: [userId], references: [id], onDelete: Restrict)
+  assignedAt  DateTime  @default(now())
+  acceptedAt  DateTime?
+  completedAt DateTime?
+
+  @@unique([taskId, userId])
+  @@index([taskId])
+  @@index([userId])
+}
+
+model Notification {
+  id        String              @id @default(uuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel   NotificationChannel @default(IN_APP)
+  title     String
+  body      String
+  payload   Json?
+  status    NotificationStatus  @default(QUEUED)
+  sentAt    DateTime?
+  readAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  userId     String?
+  user       User?       @relation("AuditedUser", fields: [userId], references: [id], onDelete: SetNull)
+  userRole   Role?
+  action     AuditAction
+  entityName String
+  entityId   String
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?
+  timestamp  DateTime    @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityName, entityId])
+  @@index([timestamp])
+}
+
+model AbuseFlag {
+  id           String          @id @default(uuid())
+  reportId     String
+  report       Report          @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reporterId   String?
+  reporter     User?           @relation("FlagReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  reason       AbuseFlagReason
+  details      String?
+  status       AbuseStatus     @default(PENDING_REVIEW)
+  reviewedById String?
+  reviewedBy   User?           @relation("FlagReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  actionNotes  String?
+  createdAt    DateTime        @default(now())
+  reviewedAt   DateTime?
+
+  @@index([reportId])
+  @@index([status])
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  description String?
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@index([key])
+}
