@@ -6,6 +6,19 @@ import {
   SensitiveDetails,
   VerificationMethod,
   TriageQueueFilters,
+  OperationsMetrics,
+  SystemConfig,
+  PriorityWeightsConfig,
+  DuplicateClusteringConfig,
+  EscalationThresholdsConfig,
+  DataRetentionConfig,
+  AdminUserItem,
+  AuditLogItem,
+  RetentionRunResult,
+  UserDataExport,
+  DataDeletionResult,
+  AfterActionReportSummary,
+  PublicTransparencyMetrics,
 } from './types';
 import { saveOfflineReport, getPendingOfflineReports, markReportSynced } from './db';
 
@@ -962,3 +975,323 @@ export async function acknowledgeEscalation(id: string, token?: string): Promise
   const json = await res.json();
   return json.data;
 }
+
+// ==========================================
+// PHASE 8: ANALYTICS, ADMIN & COMPLIANCE
+// ==========================================
+
+export async function getOperationsMetrics(token?: string): Promise<OperationsMetrics> {
+  const res = await fetch(`${API_BASE_URL}/analytics/operations`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to fetch operations metrics', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getAfterActionReport(
+  params?: { regionId?: string; startDate?: string; endDate?: string },
+  token?: string
+): Promise<AfterActionReportSummary> {
+  const url = new URL(`${API_BASE_URL}/analytics/after-action-report`);
+  if (params?.regionId) url.searchParams.set('regionId', params.regionId);
+  if (params?.startDate) url.searchParams.set('startDate', params.startDate);
+  if (params?.endDate) url.searchParams.set('endDate', params.endDate);
+
+  const res = await fetch(url.toString(), {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to fetch after-action report', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export function getAfterActionReportCsvUrl(params?: {
+  regionId?: string;
+  startDate?: string;
+  endDate?: string;
+}): string {
+  const url = new URL(`${API_BASE_URL}/analytics/after-action-report`);
+  url.searchParams.set('format', 'csv');
+  if (params?.regionId) url.searchParams.set('regionId', params.regionId);
+  if (params?.startDate) url.searchParams.set('startDate', params.startDate);
+  if (params?.endDate) url.searchParams.set('endDate', params.endDate);
+  return url.toString();
+}
+
+export async function getPublicTransparencyMetrics(): Promise<PublicTransparencyMetrics> {
+  const res = await fetch(`${API_BASE_URL}/analytics/transparency`);
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to fetch transparency metrics', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getSystemConfig(token?: string): Promise<SystemConfig> {
+  const res = await fetch(`${API_BASE_URL}/admin/config`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to fetch system config', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updatePriorityWeights(
+  weights: PriorityWeightsConfig,
+  token?: string
+): Promise<PriorityWeightsConfig> {
+  const res = await fetch(`${API_BASE_URL}/admin/config/priority-weights`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(weights),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to update priority weights', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateDuplicateClustering(
+  config: DuplicateClusteringConfig,
+  token?: string
+): Promise<DuplicateClusteringConfig> {
+  const res = await fetch(`${API_BASE_URL}/admin/config/duplicate-clustering`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(config),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to update duplicate clustering config', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateEscalationThresholds(
+  thresholds: EscalationThresholdsConfig,
+  token?: string
+): Promise<EscalationThresholdsConfig> {
+  const res = await fetch(`${API_BASE_URL}/admin/config/escalation-thresholds`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(thresholds),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to update escalation thresholds', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateFeatureFlags(
+  flags: Record<string, boolean>,
+  token?: string
+): Promise<Record<string, boolean>> {
+  const res = await fetch(`${API_BASE_URL}/admin/config/feature-flags`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(flags),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to update feature flags', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateDataRetention(
+  config: DataRetentionConfig,
+  token?: string
+): Promise<DataRetentionConfig> {
+  const res = await fetch(`${API_BASE_URL}/admin/config/data-retention`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(config),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to update data retention config', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function listAdminUsers(token?: string): Promise<AdminUserItem[]> {
+  const res = await fetch(`${API_BASE_URL}/admin/users`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to list users', res.status);
+  }
+
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function updateAdminUser(
+  userId: string,
+  data: { role?: string; isVerifiedResponder?: boolean },
+  token?: string
+): Promise<AdminUserItem> {
+  const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to update user', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getAdminAuditLogs(
+  params?: { actorId?: string; action?: string; entityName?: string; limit?: number; offset?: number },
+  token?: string
+): Promise<AuditLogItem[]> {
+  const url = new URL(`${API_BASE_URL}/admin/audit-logs`);
+  if (params?.actorId) url.searchParams.set('actorId', params.actorId);
+  if (params?.action) url.searchParams.set('action', params.action);
+  if (params?.entityName) url.searchParams.set('entityName', params.entityName);
+  if (params?.limit) url.searchParams.set('limit', String(params.limit));
+  if (params?.offset) url.searchParams.set('offset', String(params.offset));
+
+  const res = await fetch(url.toString(), {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to fetch audit logs', res.status);
+  }
+
+  const json = await res.json();
+  return json.data || [];
+}
+
+export function getAuditLogsExportCsvUrl(): string {
+  return `${API_BASE_URL}/admin/audit-logs/export`;
+}
+
+export async function triggerRetentionJob(
+  retentionDays?: number,
+  token?: string
+): Promise<RetentionRunResult> {
+  const res = await fetch(`${API_BASE_URL}/compliance/retention/run`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(retentionDays ? { retentionDays } : {}),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to trigger data retention job', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function exportUserData(userId: string, token?: string): Promise<UserDataExport> {
+  const res = await fetch(`${API_BASE_URL}/compliance/users/${userId}/export`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to export user data', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function deleteUserData(userId: string, token?: string): Promise<DataDeletionResult> {
+  const res = await fetch(`${API_BASE_URL}/compliance/users/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Failed to delete user data', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+

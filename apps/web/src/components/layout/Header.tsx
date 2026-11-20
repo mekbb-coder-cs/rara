@@ -58,6 +58,9 @@ export function Header() {
     { href: '/tasks', label: 'Field Tasks' },
     { href: '/provider', label: t('nav.provider') || 'Aid Provider' },
     { href: '/coordinator', label: t('nav.coordinator') || 'Coordinator' },
+    { href: '/operations', label: 'Operations' },
+    { href: '/admin', label: 'Admin' },
+    { href: '/transparency', label: 'Transparency' },
     { href: '/track', label: t('nav.track') },
   ];
 

@@ -93,6 +93,38 @@ export const DEFAULT_PRIORITY_WEIGHTS = {
 };
 
 export class PriorityService {
+  private customWeights?: {
+    weight_severity: number;
+    weight_people: number;
+    weight_vulnerability: number;
+    weight_waiting_time: number;
+  };
+
+  public setWeights(weights: {
+    weightSeverity: number;
+    weightPeople: number;
+    weightVulnerability: number;
+    weightWaitingTime: number;
+  }) {
+    this.customWeights = {
+      weight_severity: weights.weightSeverity,
+      weight_people: weights.weightPeople,
+      weight_vulnerability: weights.weightVulnerability,
+      weight_waiting_time: weights.weightWaitingTime,
+    };
+  }
+
+  public getWeights() {
+    return (
+      this.customWeights || {
+        weight_severity: DEFAULT_PRIORITY_WEIGHTS.weight_severity,
+        weight_people: DEFAULT_PRIORITY_WEIGHTS.weight_people,
+        weight_vulnerability: DEFAULT_PRIORITY_WEIGHTS.weight_vulnerability,
+        weight_waiting_time: DEFAULT_PRIORITY_WEIGHTS.weight_waiting_time,
+      }
+    );
+  }
+
   /**
    * Computes the deterministic, explainable priority score for a report
    */
@@ -191,10 +223,11 @@ export class PriorityService {
     }
 
     // Weighted base sum
-    const w_s = DEFAULT_PRIORITY_WEIGHTS.weight_severity;
-    const w_p = DEFAULT_PRIORITY_WEIGHTS.weight_people;
-    const w_v = DEFAULT_PRIORITY_WEIGHTS.weight_vulnerability;
-    const w_t = DEFAULT_PRIORITY_WEIGHTS.weight_waiting_time;
+    const activeWeights = this.getWeights();
+    const w_s = activeWeights.weight_severity;
+    const w_p = activeWeights.weight_people;
+    const w_v = activeWeights.weight_vulnerability;
+    const w_t = activeWeights.weight_waiting_time;
 
     const weightedSeverity = parseFloat((w_s * S).toFixed(2));
     const weightedPeople = parseFloat((w_p * f_N).toFixed(2));

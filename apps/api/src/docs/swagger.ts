@@ -614,5 +614,92 @@ export const swaggerSpec = {
         responses: { 200: { description: 'Preferences updated' } },
       },
     },
+    '/api/v1/admin/config': {
+      get: {
+        tags: ['Admin & Settings'],
+        summary: 'Get global system settings and configuration',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'System configuration' } },
+      },
+    },
+    '/api/v1/admin/config/priority-weights': {
+      put: {
+        tags: ['Admin & Settings'],
+        summary: 'Update explainable priority score formula weights (audit logged)',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Priority weights updated' } },
+      },
+    },
+    '/api/v1/admin/users': {
+      get: {
+        tags: ['Admin & Settings'],
+        summary: 'List users with roles, verification, and activity',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Users list' } },
+      },
+    },
+    '/api/v1/admin/audit-logs': {
+      get: {
+        tags: ['Admin & Audit'],
+        summary: 'Search and inspect sensitive access & audit logs',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Filtered audit logs' } },
+      },
+    },
+    '/api/v1/admin/audit-logs/export': {
+      get: {
+        tags: ['Admin & Audit'],
+        summary: 'Export audit logs to CSV',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'CSV file download' } },
+      },
+    },
+    '/api/v1/compliance/retention/run': {
+      post: {
+        tags: ['Privacy & Compliance'],
+        summary: 'Run automated data retention anonymization job on old reports',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Retention job execution summary' } },
+      },
+    },
+    '/api/v1/compliance/users/{id}/export': {
+      get: {
+        tags: ['Privacy & Compliance'],
+        summary: 'GDPR user data portability export',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'User data bundle' } },
+      },
+    },
+    '/api/v1/compliance/users/{id}': {
+      delete: {
+        tags: ['Privacy & Compliance'],
+        summary: 'GDPR right to erasure: permanently anonymize reports and erase user account',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'User erasure confirmation' } },
+      },
+    },
+    '/api/v1/analytics/operations': {
+      get: {
+        tags: ['Analytics & Operations'],
+        summary: 'Aggregated operations metrics, workload, SLA response times, and incident heat map',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Operations dashboard metrics' } },
+      },
+    },
+    '/api/v1/analytics/after-action-report': {
+      get: {
+        tags: ['Analytics & Operations'],
+        summary: 'Generate event after-action report (JSON or CSV)',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'After-action disaster report' } },
+      },
+    },
+    '/api/v1/analytics/transparency': {
+      get: {
+        tags: ['Analytics & Operations'],
+        summary: 'Public non-identifying crisis statistics & outcomes',
+        responses: { 200: { description: 'Public transparency figures' } },
+      },
+    },
   },
 };

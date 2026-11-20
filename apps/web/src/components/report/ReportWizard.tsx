@@ -94,6 +94,7 @@ export function ReportWizard() {
     savedOffline: boolean;
   } | null>(null);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
+  const [consentGiven, setConsentGiven] = useState<boolean>(false);
 
   // Step 1: Hazard Type & Description Validation
   const validateStep1 = (): boolean => {
@@ -211,6 +212,10 @@ export function ReportWizard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step !== 4) return;
+    if (!consentGiven) {
+      setErrorMessage('You must give consent for emergency responders to process this crisis report.');
+      return;
+    }
     if (formData.honeypot) {
       // Bot trapped! Silently simulate success
       setSubmissionResult({ trackingCode: 'RL-BOT-CHECK', savedOffline: false });
@@ -262,6 +267,7 @@ export function ReportWizard() {
     setSubmissionResult(null);
     setErrorMessage(null);
     setCompressionInfo(null);
+    setConsentGiven(false);
   };
 
   // ==========================================
@@ -772,6 +778,22 @@ export function ReportWizard() {
                 }
                 className="w-6 h-6 text-blue-600 rounded touch-target"
               />
+            </div>
+
+            {/* Emergency Processing & Privacy Consent Checkbox */}
+            <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/40 border-2 border-blue-200 dark:border-blue-800">
+              <label htmlFor="consentGiven" className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="consentGiven"
+                  checked={consentGiven}
+                  onChange={(e) => setConsentGiven(e.target.checked)}
+                  className="w-5 h-5 mt-0.5 rounded text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                  <strong>Consent & Privacy:</strong> I consent to ReliefLink and emergency responders processing this crisis report to dispatch humanitarian relief. I understand that location and contact details are protected under emergency data privacy regulations and role-based masking.
+                </span>
+              </label>
             </div>
           </div>
         )}

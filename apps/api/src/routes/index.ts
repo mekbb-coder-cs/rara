@@ -7,6 +7,7 @@ import regionRoutes from './region.routes.js';
 import reportRoutes from './report.routes.js';
 import matchingRoutes from './matching.routes.js';
 import { coordinationRouter } from './coordination.routes.js';
+import adminRoutes from './admin.routes.js';
 
 const router: Router = Router();
 
@@ -18,5 +19,6 @@ router.use('/regions', regionRoutes);
 router.use('/reports', reportRoutes);
 router.use('/aid', matchingRoutes);
 router.use('/coordination', coordinationRouter);
+router.use('/', adminRoutes);
 
 export default router;
