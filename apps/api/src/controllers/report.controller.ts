@@ -20,6 +20,16 @@ import { reportRepository } from '../repositories/report.repository.js';
 import { auditRepository } from '../repositories/audit.repository.js';
 import { NotFoundError } from '../utils/errors.js';
 import { obfuscateCoordinatesForPublic } from '../utils/geo.js';
+import { ingestionQueue } from '../services/ingestion-queue.service.js';
+
+// Setup async worker for queued reports under load
+ingestionQueue.on('process', async (item) => {
+  try {
+    await reportService.submitReport(item.payload);
+  } catch (err) {
+    // Handled in ingestionQueue
+  }
+});
 
 export class ReportController {
   async createReport(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -28,6 +38,23 @@ export class ReportController {
         (req.headers['idempotency-key'] as string) || req.body?.idempotencyKey;
 
       const validated = CreateReportSchema.parse(req.body);
+
+      // Backpressure check: If server is under extreme load, enqueue and respond immediately with 202
+      if (ingestionQueue.isOverloaded()) {
+        const queued = ingestionQueue.enqueue(validated);
+        res.status(202).json({
+          success: true,
+          message: 'Report received and queued for asynchronous processing under high traffic load.',
+          data: {
+            trackingCode: queued.trackingCode,
+            status: 'QUEUED',
+            etaSeconds: 5,
+          },
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
       const result = await reportService.submitReport(
         validated,
         req.user?.userId,

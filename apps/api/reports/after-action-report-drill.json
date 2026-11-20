@@ -1,0 +1,172 @@
+{
+  "title": "Tigray Regional Crisis Response & Flood Relief After-Action Report",
+  "regionId": {
+    "startDate": "2026-11-20T18:35:22.677Z",
+    "endDate": "2026-11-20T18:35:22.707Z"
+  },
+  "regionName": "Mekelle & Central Tigray",
+  "startDate": "2026-11-06",
+  "endDate": "2026-11-20",
+  "totalIncidents": 42,
+  "verifiedIncidents": 38,
+  "resolvedIncidents": 34,
+  "avgTimeToVerifyMinutes": 1,
+  "avgTimeToResolveMinutes": 1,
+  "totalAidNeeds": 28,
+  "fulfilledAidNeeds": 25,
+  "aidFulfilmentPercentage": 100,
+  "timelineEvents": [
+    {
+      "time": "2026-11-20T18:35:22.677Z",
+      "event": "SIMULATION_START",
+      "details": "Torrential downpours cause flash flooding along Geba river basin."
+    },
+    {
+      "time": "2026-11-20T18:35:22.685Z",
+      "event": "REPORT_INGESTED",
+      "details": "Tracking Code RL-1559-EG in Ayder Subcity, Mekelle, Tigray (Status: SUBMITTED)"
+    },
+    {
+      "time": "2026-11-20T18:35:22.690Z",
+      "event": "REPORT_INGESTED",
+      "details": "Tracking Code RL-8946-9O in Quiha Industrial Hub, Mekelle (Status: SUBMITTED)"
+    },
+    {
+      "time": "2026-11-20T18:35:22.700Z",
+      "event": "REPORT_INGESTED",
+      "details": "Tracking Code RL-8895-KC in School Shelter #3, Shire Inda Selassie, Tigray (Status: SUBMITTED)"
+    },
+    {
+      "time": "2026-11-20T18:35:22.700Z",
+      "event": "REPORT_INGESTED",
+      "details": "Tracking Code RL-6824-32 in Adigrat Community Clinic, Eastern Tigray (Status: SUBMITTED)"
+    },
+    {
+      "time": "2026-11-20T18:35:22.701Z",
+      "event": "REPORT_INGESTED",
+      "details": "Tracking Code RL-8376-CZ in Highway B30, Axum (Status: SUBMITTED)"
+    },
+    {
+      "time": "2026-11-20T18:35:22.701Z",
+      "event": "TRIAGE_INITIATED",
+      "details": "Emergency Operations Center (EOC) Responders review priority triage queue."
+    },
+    {
+      "time": "2026-11-20T18:35:22.702Z",
+      "event": "REPORT_VERIFIED",
+      "details": "Report RL-1559-EG confirmed as legitimate crisis."
+    },
+    {
+      "time": "2026-11-20T18:35:22.702Z",
+      "event": "REPORT_VERIFIED",
+      "details": "Report RL-8946-9O confirmed as legitimate crisis."
+    },
+    {
+      "time": "2026-11-20T18:35:22.703Z",
+      "event": "REPORT_VERIFIED",
+      "details": "Report RL-8895-KC confirmed as legitimate crisis."
+    },
+    {
+      "time": "2026-11-20T18:35:22.703Z",
+      "event": "REPORT_VERIFIED",
+      "details": "Report RL-6824-32 confirmed as legitimate crisis."
+    },
+    {
+      "time": "2026-11-20T18:35:22.703Z",
+      "event": "REPORT_VERIFIED",
+      "details": "Report RL-8376-CZ confirmed as legitimate crisis."
+    },
+    {
+      "time": "2026-11-20T18:35:22.703Z",
+      "event": "AID_NEEDS_FORMULATED",
+      "details": "Responders convert verified distress into structured aid requests."
+    },
+    {
+      "time": "2026-11-20T18:35:22.703Z",
+      "event": "NEED_REGISTERED",
+      "details": "Need 1c917352-5961-45e7-9f64-6b793050f200: 500 water jerrycans requested in Ayder."
+    },
+    {
+      "time": "2026-11-20T18:35:22.703Z",
+      "event": "NEED_REGISTERED",
+      "details": "Need 78def717-5cfd-4dc3-b7d2-77dba1e5b722: 80 medical kits in Adigrat."
+    },
+    {
+      "time": "2026-11-20T18:35:22.703Z",
+      "event": "AID_OFFERS_PUBLISHED",
+      "details": "Humanitarian NGOs publish relief stock in Tigray warehouses."
+    },
+    {
+      "time": "2026-11-20T18:35:22.704Z",
+      "event": "OFFER_ACTIVE",
+      "details": "Offer a0ba2c17-db0e-4ef7-9b28-02c599246b7f: 1,000 jerrycans available at Mekelle depot."
+    },
+    {
+      "time": "2026-11-20T18:35:22.704Z",
+      "event": "OFFER_ACTIVE",
+      "details": "Offer a746dc0b-c59b-4363-b2a7-456814b4a1b1: 200 medical kits available in Adigrat."
+    },
+    {
+      "time": "2026-11-20T18:35:22.704Z",
+      "event": "MATCHING_ENGINE_EXECUTION",
+      "details": "Engine evaluates candidates by type, PostGIS proximity, capacity, reliability."
+    },
+    {
+      "time": "2026-11-20T18:35:22.705Z",
+      "event": "CANDIDATE_MATCH_FOUND",
+      "details": "Ranked candidate Mekelle Emergency Water Reserves with score 93.2 pts."
+    },
+    {
+      "time": "2026-11-20T18:35:22.705Z",
+      "event": "MATCH_CONFIRMED",
+      "details": "Responder confirmed dispatch of 500 jerrycans via Match 4ff2b183-2a57-4860-835d-be0d2fc33306."
+    },
+    {
+      "time": "2026-11-20T18:35:22.705Z",
+      "event": "PROVIDER_ACCEPTED",
+      "details": "Red Cross logistics team accepted dispatch. Stock reserved transactionally."
+    },
+    {
+      "time": "2026-11-20T18:35:22.705Z",
+      "event": "FIELD_TASK_DISPATCH",
+      "details": "Creating task from confirmed aid match."
+    },
+    {
+      "time": "2026-11-20T18:35:22.706Z",
+      "event": "TASK_STATUS_UPDATED",
+      "details": "Task #1 status: EN_ROUTE"
+    },
+    {
+      "time": "2026-11-20T18:35:22.706Z",
+      "event": "TASK_STATUS_UPDATED",
+      "details": "Task #1 status: ON_SITE"
+    },
+    {
+      "time": "2026-11-20T18:35:22.706Z",
+      "event": "TASK_COMPLETED",
+      "details": "Task #1 marked DONE. Aid receipt confirmed."
+    },
+    {
+      "time": "2026-11-20T18:35:22.707Z",
+      "event": "CASE_RESOLVED",
+      "details": "Incident RL-1559-EG officially closed."
+    },
+    {
+      "time": "2026-11-20T18:35:22.707Z",
+      "event": "GENERATING_AAR",
+      "details": "Compiling disaster response telemetry into After-Action Report summary."
+    }
+  ],
+  "resourceExpenditure": [
+    {
+      "aidType": "FOOD_WATER",
+      "quantity": 500,
+      "unit": "20L water jerrycans"
+    },
+    {
+      "aidType": "MEDICAL",
+      "quantity": 80,
+      "unit": "trauma and pediatric kits"
+    }
+  ]
+}

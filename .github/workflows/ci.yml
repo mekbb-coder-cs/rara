@@ -1,0 +1,156 @@
+name: ReliefLink CI/CD & Production Readiness Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-quality-and-security:
+    name: Lint, Types & Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Shared Package
+        run: pnpm --filter @relieflink/shared build
+
+      - name: Dependency Security Audit
+        run: pnpm audit --audit-level=high
+
+  backend-test-suite:
+    name: API Unit & Integration Tests (PostGIS + Redis)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: relieflink
+          POSTGRES_PASSWORD: relieflink_secret
+          POSTGRES_DB: relieflink_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Shared Package
+        run: pnpm --filter @relieflink/shared build
+
+      - name: Run API Tests with Coverage
+        run: pnpm --filter @relieflink/api test
+        env:
+          DATABASE_URL: postgresql://relieflink:relieflink_secret@localhost:5432/relieflink_test?schema=public
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test_jwt_secret_key_ci_32chars_long_1234
+          JWT_REFRESH_SECRET: test_jwt_refresh_ci_secret_32chars_1234
+          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+  frontend-build-and-e2e:
+    name: Web Build & Playwright E2E Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Shared Package
+        run: pnpm --filter @relieflink/shared build
+
+      - name: Build Next.js Production Web
+        run: pnpm --filter @relieflink/web build
+
+      - name: Install Playwright Browsers
+        run: pnpm --filter @relieflink/web exec playwright install --with-deps chromium
+
+      - name: Run All Playwright E2E Flows
+        run: pnpm --filter @relieflink/web test:e2e
+        env:
+          CI: true
+
+  docker-build-verification:
+    name: Production Docker Build Verification
+    runs-on: ubuntu-latest
+    needs: [code-quality-and-security, backend-test-suite]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          tags: relieflink-api:latest
+
+      - name: Build Web Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: false
+          tags: relieflink-web:latest

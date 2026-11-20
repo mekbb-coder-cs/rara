@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env.js';
 import { securityHeaders, strictCors } from './middleware/security.js';
+import { xssSanitizer } from './middleware/sanitize.js';
 import { standardRateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import apiRoutes from './routes/index.js';
@@ -19,6 +20,7 @@ export function createApp(): Express {
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true, limit: '2mb' }));
   app.use(cookieParser());
+  app.use(xssSanitizer);
 
   // 3. Rate Limiting
   app.use(standardRateLimiter);
