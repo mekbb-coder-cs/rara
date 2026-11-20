@@ -51,8 +51,9 @@ export function Header() {
   };
 
   const navLinks = [
+    { href: '/hub', label: '⭐ All-in-One Hub', primary: true },
     { href: '/', label: t('nav.home') },
-    { href: '/report', label: t('nav.report'), primary: true },
+    { href: '/report', label: t('nav.report') },
     { href: '/map', label: t('nav.map') },
     { href: '/responder', label: t('nav.login') },
     { href: '/tasks', label: 'Field Tasks' },

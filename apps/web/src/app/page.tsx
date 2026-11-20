@@ -50,6 +50,18 @@ export default function HomePage() {
         <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 font-normal">
           Report floods, fires, medical crises, and essential relief needs. Connected directly to local volunteer responders, NGOs, and humanitarian organizations.
         </p>
+
+        {/* All-in-One Mission Hub Callout */}
+        <div className="pt-2">
+          <Link
+            href="/hub"
+            className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-extrabold text-sm sm:text-base shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-0.5 active:scale-95 border border-white/20"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Open All-in-One Mission Hub (All Portals in One Link)</span>
+            <span className="text-blue-200">&rarr;</span>
+          </Link>
+        </div>
       </section>
 
       {/* Primary Action Cards Grid */}
