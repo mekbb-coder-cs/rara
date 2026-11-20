@@ -53,8 +53,10 @@ export function Header() {
     { href: '/', label: t('nav.home') },
     { href: '/report', label: t('nav.report'), primary: true },
     { href: '/map', label: t('nav.map') },
+    { href: '/responder', label: t('nav.login') },
+    { href: '/provider', label: t('nav.provider') || 'Aid Provider' },
+    { href: '/coordinator', label: t('nav.coordinator') || 'Coordinator' },
     { href: '/track', label: t('nav.track') },
-    { href: '/login', label: t('nav.login') },
   ];
 
   return (

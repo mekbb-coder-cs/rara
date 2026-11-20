@@ -14,12 +14,12 @@ export function errorHandler(
   const path = req.originalUrl || req.url;
 
   // 1. Zod Validation Error
-  if (err instanceof ZodError) {
-    const formattedIssues = err.issues.map((i) => ({
-      field: i.path.join('.'),
+  if (err instanceof ZodError || err.name === 'ZodError') {
+    const formattedIssues = (err as ZodError).issues?.map((i) => ({
+      field: i.path?.join('.') || 'root',
       message: i.message,
       code: i.code,
-    }));
+    })) || [{ field: 'root', message: err.message, code: 'invalid' }];
 
     res.status(400).json({
       success: false,

@@ -407,3 +407,259 @@ export async function bulkActionReports(
   const json = await res.json();
   return json.data;
 }
+
+// ==========================================
+// PHASE 6: AID SUPPLY & MATCHING API CALLS
+// ==========================================
+
+export async function createAidOffer(
+  offerData: {
+    aidType: string;
+    title: string;
+    description?: string;
+    capacityTotal: number;
+    unit: string;
+    latitude: number;
+    longitude: number;
+    serviceRadiusKm?: number;
+    availableUntil?: string;
+  },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/aid/offers`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(offerData),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    const message = errorJson.message || errorJson?.error?.message || 'Publishing aid offer failed';
+    throw new ApiError(message, res.status, errorJson?.error?.code);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function listAidOffers(
+  filters?: { aidType?: string; status?: string; regionId?: string },
+  token?: string
+): Promise<any[]> {
+  const params = new URLSearchParams();
+  if (filters?.aidType) params.append('aidType', filters.aidType);
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.regionId) params.append('regionId', filters.regionId);
+
+  const res = await fetch(`${API_BASE_URL}/aid/offers?${params.toString()}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return [];
+  }
+
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function listAidNeeds(
+  filters?: { reportId?: string; aidType?: string; status?: string; isEscalated?: boolean },
+  token?: string
+): Promise<any[]> {
+  const params = new URLSearchParams();
+  if (filters?.reportId) params.append('reportId', filters.reportId);
+  if (filters?.aidType) params.append('aidType', filters.aidType);
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.isEscalated !== undefined) params.append('isEscalated', String(filters.isEscalated));
+
+  const res = await fetch(`${API_BASE_URL}/aid/needs?${params.toString()}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return [];
+  }
+
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function createAidNeed(
+  needData: {
+    reportId: string;
+    aidType: string;
+    quantityRequired: number;
+    unit: string;
+    urgency: string;
+    notes?: string;
+  },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/aid/needs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(needData),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    const message = errorJson.message || errorJson?.error?.message || 'Structuring aid need failed';
+    throw new ApiError(message, res.status, errorJson?.error?.code);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getCandidateMatches(
+  needId: string,
+  token?: string
+): Promise<{
+  need: any;
+  candidates: any[];
+  noMatchFound: boolean;
+  candidateCount: number;
+}> {
+  const res = await fetch(`${API_BASE_URL}/aid/needs/${needId}/candidates`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(
+      errorJson.message || 'Fetching match candidates failed',
+      res.status,
+      errorJson?.error?.code
+    );
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function confirmMatch(
+  params: {
+    needId: string;
+    offerId: string;
+    requestedQuantity: number;
+    timeoutMinutes?: number;
+    notes?: string;
+  },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/aid/matches/confirm`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    const message =
+      errorJson.message ||
+      errorJson?.error?.message ||
+      'Match confirmation failed. Stock may have been allocated to another incident.';
+    throw new ApiError(message, res.status, errorJson?.error?.code);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function providerRespondToMatch(
+  matchId: string,
+  data: {
+    action: 'ACCEPT' | 'DECLINE' | 'PARTIAL';
+    declineReason?: string;
+    partiallyFulfilledQuantity?: number;
+    notes?: string;
+  },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/aid/matches/${matchId}/respond`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    const message = errorJson.message || errorJson?.error?.message || 'Provider response failed';
+    throw new ApiError(message, res.status, errorJson?.error?.code);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function listProviderMatches(token?: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE_URL}/aid/matches/provider-queue`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return [];
+  }
+
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function escalateNeed(
+  needId: string,
+  reason: string,
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/aid/needs/${needId}/escalate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ reason }),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Escalation failed', res.status, errorJson?.error?.code);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getCoordinatorOverview(token?: string): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/aid/coordinator/unmatched`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return { unmatchedNeeds: [], totalEscalated: 0, totalOpen: 0 };
+  }
+
+  const json = await res.json();
+  return json.data;
+}

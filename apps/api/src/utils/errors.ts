@@ -54,6 +54,15 @@ export class ConcurrencyConflictError extends AppError {
   }
 }
 
+export class InsufficientCapacityError extends AppError {
+  constructor(
+    message = 'Insufficient available inventory capacity. This resource has already been allocated or reserved.',
+    details?: unknown
+  ) {
+    super(409, 'INSUFFICIENT_CAPACITY', message, details);
+  }
+}
+
 export class RateLimitError extends AppError {
   constructor(message = 'Too many requests, please try again later', details?: unknown) {
     super(429, 'RATE_LIMIT_EXCEEDED', message, details);

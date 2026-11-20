@@ -17,6 +17,7 @@ import {
   ApiError,
 } from '../../lib/api';
 import { PriorityBadge } from './PriorityBadge';
+import { MatchingPanel } from './MatchingPanel';
 import {
   X,
   ShieldCheck,
@@ -34,6 +35,7 @@ import {
   CheckCircle,
   HelpCircle,
   Sliders,
+  Truck,
 } from 'lucide-react';
 
 interface VerificationModalProps {
@@ -53,7 +55,7 @@ export function VerificationModal({
   token,
   currentUserId,
 }: VerificationModalProps) {
-  const [activeTab, setActiveTab] = useState<'verify' | 'status' | 'override' | 'info'>('verify');
+  const [activeTab, setActiveTab] = useState<'verify' | 'status' | 'override' | 'info' | 'matching'>('verify');
   const [sensitive, setSensitive] = useState<SensitiveDetails | null>(null);
   const [revealingPii, setRevealingPii] = useState(false);
   const [piiError, setPiiError] = useState<string | null>(null);
@@ -493,6 +495,16 @@ export function VerificationModal({
             >
               <HelpCircle className="w-4 h-4" /> Request Info
             </button>
+            <button
+              onClick={() => setActiveTab('matching')}
+              className={`pb-2.5 px-3 font-bold text-xs sm:text-sm flex items-center gap-1.5 border-b-2 transition-all ${
+                activeTab === 'matching'
+                  ? 'border-emerald-500 text-emerald-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Truck className="w-4 h-4" /> Aid Matching
+            </button>
           </div>
 
           {/* Tab 1: Verification Form */}
@@ -692,6 +704,22 @@ export function VerificationModal({
                 <MessageSquare className="w-4 h-4" /> Send Request to Case Timeline
               </button>
             </form>
+          )}
+
+          {/* Tab 5: Humanitarian Aid Matching */}
+          {activeTab === 'matching' && (
+            <div className="pt-2">
+              <MatchingPanel
+                reportId={report.id}
+                reportTitle={report.title}
+                reportTrackingCode={report.trackingCode}
+                reportLatitude={report.latitude}
+                reportLongitude={report.longitude}
+                onMatchConfirmed={() => {
+                  setActionSuccess('Aid match confirmed! Stock reserved and dispatched.');
+                }}
+              />
+            </div>
           )}
         </div>
       </div>

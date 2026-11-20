@@ -65,6 +65,7 @@ export function ReportWizard() {
 
   // Wizard Step: 1, 2, 3, 4, or 5 (Success)
   const [step, setStep] = useState<number>(1);
+  const [step4EnteredAt, setStep4EnteredAt] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -194,6 +195,9 @@ export function ReportWizard() {
     if (step === 1 && !validateStep1()) return;
     if (step === 2 && !validateStep2()) return;
     if (step === 3 && !validateStep3()) return;
+    if (step === 3) {
+      setStep4EnteredAt(Date.now());
+    }
     setErrorMessage(null);
     setStep((prev) => prev + 1);
   };
@@ -206,6 +210,7 @@ export function ReportWizard() {
   // Final Submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (step !== 4) return;
     if (formData.honeypot) {
       // Bot trapped! Silently simulate success
       setSubmissionResult({ trackingCode: 'RL-BOT-CHECK', savedOffline: false });
@@ -788,6 +793,7 @@ export function ReportWizard() {
 
           {step < 4 ? (
             <button
+              key={`wizard-btn-next-${step}`}
               type="button"
               onClick={handleNext}
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-base shadow transition touch-target"
@@ -797,6 +803,7 @@ export function ReportWizard() {
             </button>
           ) : (
             <button
+              key="wizard-btn-submit"
               type="submit"
               disabled={isSubmitting}
               className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-red-700 hover:bg-red-800 text-white font-black text-base shadow-lg transition touch-target disabled:opacity-50"

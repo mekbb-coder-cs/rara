@@ -378,5 +378,135 @@ export const swaggerSpec = {
         },
       },
     },
+    // ==========================================
+    // PHASE 6: AID SUPPLY AND MATCHING
+    // ==========================================
+    '/api/v1/aid/offers': {
+      post: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Publish new aid offer (Approved Providers & Admins)',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          201: { description: 'Aid offer published' },
+          403: { description: 'Forbidden (Unapproved organization)' },
+        },
+      },
+      get: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Query active aid offers by type, location, and radius',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'List of matching aid offers' },
+        },
+      },
+    },
+    '/api/v1/aid/offers/{id}': {
+      get: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Retrieve single aid offer with inventory status',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Aid offer record' },
+          404: { description: 'Not found' },
+        },
+      },
+      patch: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Update aid offer details and capacity',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Aid offer updated' },
+        },
+      },
+    },
+    '/api/v1/aid/needs': {
+      post: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Structure an AidNeed from a verified incident report (Responders & Coordinators)',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          201: { description: 'Aid need structured and registered' },
+        },
+      },
+      get: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Query aid needs',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'List of aid needs' },
+        },
+      },
+    },
+    '/api/v1/aid/needs/{id}/candidates': {
+      get: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Rank candidate offers for an AidNeed using the transparent matching engine',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Ranked candidate offers with score breakdown' },
+        },
+      },
+    },
+    '/api/v1/aid/matches/confirm': {
+      post: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Responder confirms suggested match; atomically reserves stock and dispatches to provider',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          201: { description: 'Match confirmed, stock reserved' },
+          409: { description: 'Insufficient capacity / Double-allocation prevented' },
+        },
+      },
+    },
+    '/api/v1/aid/matches/{id}/respond': {
+      post: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Aid provider responds: accept, decline (mandatory reason), or partial fulfill',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Provider response processed, inventory and reliability updated' },
+        },
+      },
+    },
+    '/api/v1/aid/matches/provider-queue': {
+      get: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Retrieve provider incoming match requests and active matches',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Provider match queue' },
+        },
+      },
+    },
+    '/api/v1/aid/needs/{id}/escalate': {
+      post: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Escalate unmatchable need to emergency coordinators',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Need escalated to coordinator' },
+        },
+      },
+    },
+    '/api/v1/aid/coordinator/unmatched': {
+      get: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Coordinator overview of unmatched and escalated needs across regions',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Overview of unmatched needs and capacity deficits' },
+        },
+      },
+    },
+    '/api/v1/aid/matches/process-timeouts': {
+      post: {
+        tags: ['Aid Supply & Matching'],
+        summary: 'Trigger sweep for timed-out provider match requests and re-route to next best candidates',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Timeouts processed and re-routed' },
+        },
+      },
+    },
   },
 };

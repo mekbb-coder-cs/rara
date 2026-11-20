@@ -276,6 +276,10 @@ model Organization {
   contactEmail   String
   contactPhone   String
   website        String?
+  reliabilityScore Float                @default(1.0)
+  matchesCompleted Int                 @default(0)
+  matchesDeclined  Int                 @default(0)
+  matchesTimedOut  Int                 @default(0)
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
   deletedAt      DateTime?
@@ -509,22 +513,31 @@ model PriorityScore {
 }
 
 model AidNeed {
-  id               String      @id @default(uuid())
-  reportId         String
-  report           Report      @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  aidType          AidType
-  quantityRequired Int         @default(1)
-  unit             String
-  urgency          NeedUrgency @default(URGENT)
-  notes            String?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  id                String      @id @default(uuid())
+  reportId          String
+  report            Report      @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  aidType           AidType
+  quantityRequired  Int         @default(1)
+  quantityFulfilled Int         @default(0)
+  unit              String
+  urgency           NeedUrgency @default(URGENT)
+  status            String      @default("OPEN")
+  notes             String?
+  latitude          Float?
+  longitude         Float?
+  isEscalated       Boolean     @default(false)
+  escalatedAt       DateTime?
+  escalationReason  String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
-  matches          Match[]
+  matches           Match[]
 
   @@index([reportId])
   @@index([aidType])
   @@index([urgency])
+  @@index([status])
+  @@index([isEscalated])
 }
 
 model AidOffer {
@@ -538,8 +551,11 @@ model AidOffer {
   description       String?
   capacityTotal     Int
   capacityRemaining Int
+  capacityReserved  Int                                   @default(0)
+  capacityFulfilled Int                                   @default(0)
   unit              String
   status            AidStatus                             @default(AVAILABLE)
+  version           Int                                   @default(1)
   
   latitude          Float
   longitude         Float
@@ -597,6 +613,11 @@ model Match {
   estimatedTravelMins Float?
   status              MatchStatus  @default(PROPOSED)
   scoreBreakdown      Json
+  declineReason       String?
+  partiallyFulfilledQuantity Int?
+  timeoutAt           DateTime?
+  isRerouted          Boolean      @default(false)
+  reroutedMatchId     String?
   
   proposedAt          DateTime     @default(now())
   confirmedAt         DateTime?
