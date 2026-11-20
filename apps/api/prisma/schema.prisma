@@ -111,7 +111,10 @@ enum TaskStatus {
   ASSIGNED
   EN_ROUTE
   ON_SCENE
+  ON_SITE
   COMPLETED
+  DONE
+  FAILED
   ABORTED
 }
 
@@ -409,6 +412,15 @@ model Report {
   manualOverrideScore   Float?
   manualOverrideReason  String?
 
+  // Case Closure & Reopening (Phase 7)
+  closedAt              DateTime?
+  closingNote           String?
+  confirmedWithReporter Boolean                               @default(false)
+  closedByUserId        String?
+  reopenedAt            DateTime?
+  reopenReason          String?
+  reopenedByUserId      String?
+
   createdAt             DateTime                              @default(now())
   updatedAt             DateTime                              @updatedAt
   deletedAt             DateTime?
@@ -421,6 +433,7 @@ model Report {
   needs                 AidNeed[]
   tasks                 Task[]
   abuseFlags            AbuseFlag[]
+  chatMessages          TeamChatMessage[]
 
   @@index([status])
   @@index([hazardType])
@@ -644,11 +657,19 @@ model Task {
   createdBy      User             @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Restrict)
   
   title          String
-  description    String
+  description    String?
+  taskType       String           @default("DELIVER_SUPPLIES")
   priority       TaskPriority     @default(MEDIUM)
-  status         TaskStatus       @default(PENDING)
+  status         TaskStatus       @default(ASSIGNED)
   deadline       DateTime?
   completedAt    DateTime?
+  checklist      Json             @default("[]")
+  assigneeId     String?
+  assigneeName   String?
+  lastLatitude   Float?
+  lastLongitude  Float?
+  lastLocationAt DateTime?
+  isTrackingActive Boolean        @default(false)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
@@ -658,6 +679,7 @@ model Task {
   @@index([status])
   @@index([priority])
   @@index([organizationId])
+  @@index([assigneeId])
 }
 
 model TaskAssignment {
@@ -741,4 +763,97 @@ model SystemSetting {
   createdAt   DateTime @default(now())
 
   @@index([key])
+}
+
+// ==========================================
+// PHASE 7: COORDINATION & COMMUNICATION
+// ==========================================
+
+model TeamChatMessage {
+  id         String   @id @default(uuid())
+  reportId   String
+  report     Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  senderId   String
+  senderName String
+  senderRole String
+  senderOrg  String?
+  message    String
+  createdAt  DateTime @default(now())
+
+  @@index([reportId, createdAt])
+}
+
+model BroadcastAlert {
+  id              String   @id @default(uuid())
+  title           String
+  message         String
+  severity        String   @default("WARNING") // INFO, WARNING, CRITICAL
+  regionId        String?
+  areaName        String?
+  active          Boolean  @default(true)
+  expiresAt       DateTime?
+  createdByUserId String
+  createdByName   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([active])
+  @@index([regionId])
+  @@index([createdAt])
+}
+
+model DeliveryLog {
+  id             String              @id @default(uuid())
+  notificationId String
+  channel        NotificationChannel
+  recipient      String
+  status         String              // SENT, FAILED, RETRYING
+  attempts       Int                 @default(1)
+  lastError      String?
+  deliveredAt    DateTime?
+  createdAt      DateTime            @default(now())
+
+  @@index([notificationId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model UserNotificationPreference {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  emailEnabled    Boolean  @default(true)
+  smsEnabled      Boolean  @default(true)
+  pushEnabled     Boolean  @default(true)
+  inAppEnabled    Boolean  @default(true)
+  quietHoursStart String?  // e.g. "22:00"
+  quietHoursEnd   String?  // e.g. "07:00"
+  updatedAt       DateTime @updatedAt
+}
+
+model EscalationRule {
+  id                         String   @id @default(uuid())
+  regionId                   String   @unique
+  regionName                 String?
+  unverifiedThresholdMinutes Int      @default(30)
+  unmatchedThresholdMinutes  Int      @default(60)
+  isActive                   Boolean  @default(true)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+}
+
+model EscalationAlert {
+  id                 String    @id @default(uuid())
+  reportId           String
+  reportTrackingCode String
+  reportTitle        String
+  regionId           String
+  reason             String    // UNVERIFIED_STALLED, UNMATCHED_STALLED, MANUAL_ESCALATION
+  waitingMinutes     Int       @default(0)
+  triggeredAt        DateTime  @default(now())
+  acknowledgedBy     String?
+  acknowledgedAt     DateTime?
+
+  @@index([reportId])
+  @@index([regionId])
+  @@index([triggeredAt])
 }

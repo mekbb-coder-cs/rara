@@ -6,6 +6,7 @@ import healthRoutes from './health.routes.js';
 import regionRoutes from './region.routes.js';
 import reportRoutes from './report.routes.js';
 import matchingRoutes from './matching.routes.js';
+import { coordinationRouter } from './coordination.routes.js';
 
 const router: Router = Router();
 
@@ -16,5 +17,6 @@ router.use('/anonymous', anonymousRoutes);
 router.use('/regions', regionRoutes);
 router.use('/reports', reportRoutes);
 router.use('/aid', matchingRoutes);
+router.use('/coordination', coordinationRouter);
 
 export default router;

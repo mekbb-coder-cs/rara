@@ -14,10 +14,14 @@ import {
   revealSensitiveDetails,
   requestMoreInfo,
   assignResponder,
+  closeCase,
+  reopenCase,
   ApiError,
 } from '../../lib/api';
 import { PriorityBadge } from './PriorityBadge';
 import { MatchingPanel } from './MatchingPanel';
+import { CaseTeamChat } from './CaseTeamChat';
+import { TaskAssignmentModal } from './TaskAssignmentModal';
 import {
   X,
   ShieldCheck,
@@ -36,6 +40,8 @@ import {
   HelpCircle,
   Sliders,
   Truck,
+  RotateCcw,
+  ListTodo,
 } from 'lucide-react';
 
 interface VerificationModalProps {
@@ -55,7 +61,9 @@ export function VerificationModal({
   token,
   currentUserId,
 }: VerificationModalProps) {
-  const [activeTab, setActiveTab] = useState<'verify' | 'status' | 'override' | 'info' | 'matching'>('verify');
+  const [activeTab, setActiveTab] = useState<
+    'verify' | 'status' | 'override' | 'info' | 'matching' | 'chat' | 'closure'
+  >('verify');
   const [sensitive, setSensitive] = useState<SensitiveDetails | null>(null);
   const [revealingPii, setRevealingPii] = useState(false);
   const [piiError, setPiiError] = useState<string | null>(null);
@@ -74,6 +82,12 @@ export function VerificationModal({
 
   const [infoMessage, setInfoMessage] = useState<string>('');
 
+  // Coordination & Field Tasks state
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [closingNote, setClosingNote] = useState('');
+  const [confirmedWithReporter, setConfirmedWithReporter] = useState(true);
+  const [reopenReason, setReopenReason] = useState('');
+
   const [submitting, setSubmitting] = useState(false);
   const [conflictError, setConflictError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
@@ -89,6 +103,9 @@ export function VerificationModal({
       setOverrideScore(Math.round(report.priorityScore || 50));
       setOverrideReason('');
       setInfoMessage('');
+      setClosingNote('');
+      setConfirmedWithReporter(true);
+      setReopenReason('');
     }
   }, [report?.id]);
 
@@ -228,6 +245,48 @@ export function VerificationModal({
     }
   };
 
+  const handleCloseCaseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setConflictError(null);
+    try {
+      await closeCase(
+        report.id,
+        { closingNote, confirmedWithReporter },
+        token
+      );
+      setActionSuccess('Case successfully resolved and closed!');
+      setTimeout(() => {
+        onRefresh();
+      }, 1000);
+    } catch (err: any) {
+      setConflictError(err.message || 'Failed to close case');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReopenCaseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setConflictError(null);
+    try {
+      await reopenCase(
+        report.id,
+        { reopenReason },
+        token
+      );
+      setActionSuccess('Case successfully reopened!');
+      setTimeout(() => {
+        onRefresh();
+      }, 1000);
+    } catch (err: any) {
+      setConflictError(err.message || 'Failed to reopen case');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleToggleAssignment = async () => {
     setSubmitting(true);
     setConflictError(null);
@@ -283,6 +342,12 @@ export function VerificationModal({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsTaskModalOpen(true)}
+              className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white transition-colors"
+            >
+              <ListTodo className="w-3.5 h-3.5" /> Dispatch Task
+            </button>
             <button
               onClick={handleToggleAssignment}
               disabled={submitting}
@@ -505,6 +570,26 @@ export function VerificationModal({
             >
               <Truck className="w-4 h-4" /> Aid Matching
             </button>
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`pb-2.5 px-3 font-bold text-xs sm:text-sm flex items-center gap-1.5 border-b-2 transition-all ${
+                activeTab === 'chat'
+                  ? 'border-indigo-500 text-indigo-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" /> Team Chat
+            </button>
+            <button
+              onClick={() => setActiveTab('closure')}
+              className={`pb-2.5 px-3 font-bold text-xs sm:text-sm flex items-center gap-1.5 border-b-2 transition-all ${
+                activeTab === 'closure'
+                  ? 'border-amber-500 text-amber-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <CheckCircle className="w-4 h-4" /> Resolution & Closure
+            </button>
           </div>
 
           {/* Tab 1: Verification Form */}
@@ -721,7 +806,114 @@ export function VerificationModal({
               />
             </div>
           )}
+
+          {/* Tab 6: Case Team Chat */}
+          {activeTab === 'chat' && (
+            <div className="pt-2">
+              <CaseTeamChat
+                reportId={report.id}
+                reportTrackingCode={report.trackingCode}
+                currentUserId={currentUserId}
+                currentUserRole="RESPONDER"
+              />
+            </div>
+          )}
+
+          {/* Tab 7: Resolution & Closure */}
+          {activeTab === 'closure' && (
+            <div className="space-y-6 pt-2">
+              <div className="bg-slate-800/60 p-5 rounded-2xl border border-slate-700 space-y-4">
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
+                  Close / Resolve Humanitarian Incident
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Record final resolution of this humanitarian crisis incident. Confirm whether assistance was delivered and the reporter or community contact was notified.
+                </p>
+
+                <form onSubmit={handleCloseCaseSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                      Mandatory Closing Note <span className="text-red-400">*</span>
+                    </label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={closingNote}
+                      onChange={(e) => setClosingNote(e.target.value)}
+                      placeholder="e.g. Clean drinking water supplies delivered to village elders; floodwaters receding; medical triage complete."
+                      className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg p-2.5 text-sm focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-300 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={confirmedWithReporter}
+                      onChange={(e) => setConfirmedWithReporter(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-700 text-emerald-600 focus:ring-0"
+                    />
+                    <span className="font-semibold">Confirmed resolution directly with the reporter / community contact</span>
+                  </label>
+
+                  <button
+                    type="submit"
+                    disabled={submitting || !closingNote.trim()}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-lg shadow-emerald-950/50"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Resolve & Close Incident
+                  </button>
+                </form>
+              </div>
+
+              {/* Reopen Section */}
+              <div className="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/60 space-y-4">
+                <h3 className="text-sm font-black text-amber-300 flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4 text-amber-400" />
+                  Reopen Incident (Crisis Resurgence)
+                </h3>
+                <p className="text-xs text-slate-400">
+                  If conditions deteriorate, secondary flooding occurs, or previously delivered aid is insufficient, reopen this case with a mandatory rationale.
+                </p>
+
+                <form onSubmit={handleReopenCaseSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                      Mandatory Reopen Reason <span className="text-red-400">*</span>
+                    </label>
+                    <textarea
+                      required
+                      rows={2}
+                      value={reopenReason}
+                      onChange={(e) => setReopenReason(e.target.value)}
+                      placeholder="Explain why this closed case requires reopening..."
+                      className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg p-2.5 text-sm focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting || !reopenReason.trim()}
+                    className="w-full py-2.5 bg-amber-600 hover:bg-amber-500 rounded-lg font-bold text-xs text-white flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                  >
+                    <RotateCcw className="w-4 h-4" /> Reopen Incident for Action
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
+
+        <TaskAssignmentModal
+          isOpen={isTaskModalOpen}
+          onClose={() => setIsTaskModalOpen(false)}
+          reportId={report.id}
+          reportTrackingCode={report.trackingCode}
+          onTaskCreated={() => {
+            setActionSuccess('Field Task successfully created and assigned!');
+            onRefresh();
+          }}
+        />
       </div>
     </div>
   );

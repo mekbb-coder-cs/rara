@@ -278,3 +278,93 @@ export interface MatchRecordItem {
   offer?: AidOfferItem;
 }
 
+// ==========================================
+// PHASE 7: COORDINATION & COMMUNICATION
+// ==========================================
+
+export type TaskType =
+  | 'DELIVER_SUPPLIES'
+  | 'EVACUATE'
+  | 'MEDICAL_VISIT'
+  | 'SEARCH_RESCUE'
+  | 'DAMAGE_ASSESSMENT'
+  | 'OTHER';
+
+export type TaskStatus = 'ASSIGNED' | 'EN_ROUTE' | 'ON_SITE' | 'DONE' | 'FAILED';
+
+export interface TaskChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+export interface TaskRecordItem {
+  id: string;
+  reportId: string;
+  reportTrackingCode?: string;
+  matchId?: string | null;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
+  type: TaskType;
+  title: string;
+  description?: string | null;
+  deadline?: string | null;
+  status: TaskStatus;
+  checklist: TaskChecklistItem[];
+  lastLatitude?: number | null;
+  lastLongitude?: number | null;
+  lastLocationAt?: string | null;
+  isTrackingActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LiveVolunteerLocation {
+  taskId: string;
+  assigneeId: string;
+  assigneeName: string;
+  taskTitle: string;
+  taskType: TaskType;
+  taskStatus: TaskStatus;
+  latitude: number;
+  longitude: number;
+  updatedAt: string;
+}
+
+export interface TeamChatMessageItem {
+  id: string;
+  reportId: string;
+  senderId: string;
+  senderName: string;
+  senderRole: string;
+  senderOrg?: string | null;
+  message: string;
+  createdAt: string;
+}
+
+export interface BroadcastAlertItem {
+  id: string;
+  title: string;
+  message: string;
+  severity: 'INFO' | 'WARNING' | 'CRITICAL';
+  regionId?: string | null;
+  areaName?: string | null;
+  active: boolean;
+  expiresAt?: string | null;
+  createdByName?: string;
+  createdAt: string;
+}
+
+export interface EscalationAlertItem {
+  id: string;
+  reportId: string;
+  reportTrackingCode: string;
+  reportTitle: string;
+  regionId: string;
+  reason: 'UNVERIFIED_STALLED' | 'UNMATCHED_STALLED' | 'MANUAL_ESCALATION';
+  waitingMinutes: number;
+  triggeredAt: string;
+  acknowledgedBy?: string | null;
+  acknowledgedAt?: string | null;
+}
+

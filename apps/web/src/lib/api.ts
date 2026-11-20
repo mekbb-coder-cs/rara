@@ -663,3 +663,302 @@ export async function getCoordinatorOverview(token?: string): Promise<any> {
   const json = await res.json();
   return json.data;
 }
+
+// ==========================================
+// PHASE 7: COORDINATION & COMMUNICATION
+// ==========================================
+
+export async function createTask(
+  params: {
+    reportId: string;
+    matchId?: string | null;
+    type: string;
+    title: string;
+    description?: string | null;
+    deadline?: string | null;
+    assigneeId?: string | null;
+    assigneeName?: string | null;
+    checklist?: Array<{ id: string; text: string; completed: boolean }>;
+  },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/coordination/tasks`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Creating task failed', res.status, errorJson?.error?.code);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function listTasks(
+  filters?: { reportId?: string; assigneeId?: string; status?: string; type?: string },
+  token?: string
+): Promise<any[]> {
+  const params = new URLSearchParams();
+  if (filters?.reportId) params.append('reportId', filters.reportId);
+  if (filters?.assigneeId) params.append('assigneeId', filters.assigneeId);
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.type) params.append('type', filters.type);
+
+  const res = await fetch(`${API_BASE_URL}/coordination/tasks?${params.toString()}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return [];
+  }
+
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function getTask(id: string, token?: string): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/coordination/tasks/${id}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    throw new ApiError('Task not found', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateTaskStatus(
+  id: string,
+  data: {
+    status: string;
+    checklist?: Array<{ id: string; text: string; completed: boolean }>;
+    note?: string;
+  },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/coordination/tasks/${id}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Updating task status failed', res.status, errorJson?.error?.code);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function updateTaskLocation(
+  id: string,
+  data: {
+    latitude: number;
+    longitude: number;
+    heading?: number | null;
+    speed?: number | null;
+    isTrackingActive?: boolean;
+  },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/coordination/tasks/${id}/location`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Updating task location failed', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getLiveVolunteerTracking(token?: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE_URL}/coordination/tracking/live`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return [];
+  }
+
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function closeCase(
+  reportId: string,
+  data: { closingNote: string; confirmedWithReporter: boolean },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/coordination/cases/${reportId}/close`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Closing case failed', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function reopenCase(
+  reportId: string,
+  data: { reopenReason: string },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/coordination/cases/${reportId}/reopen`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Reopening case failed', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function getCaseChat(reportId: string, token?: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE_URL}/coordination/cases/${reportId}/chat`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return [];
+  }
+
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function sendCaseChatMessage(
+  reportId: string,
+  message: string,
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/coordination/cases/${reportId}/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ message }),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Sending message failed', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function listBroadcastAlerts(regionId?: string): Promise<any[]> {
+  const url = regionId
+    ? `${API_BASE_URL}/coordination/broadcasts?regionId=${regionId}`
+    : `${API_BASE_URL}/coordination/broadcasts`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function createBroadcastAlert(
+  data: {
+    title: string;
+    message: string;
+    severity?: string;
+    regionId?: string | null;
+    areaName?: string | null;
+    expiresAt?: string | null;
+  },
+  token?: string
+): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/coordination/broadcasts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Publishing broadcast failed', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}
+
+export async function listEscalations(token?: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE_URL}/coordination/escalations`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
+export async function acknowledgeEscalation(id: string, token?: string): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/coordination/escalations/${id}/acknowledge`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    const errorJson = await res.json().catch(() => ({}));
+    throw new ApiError(errorJson.message || 'Acknowledging escalation failed', res.status);
+  }
+
+  const json = await res.json();
+  return json.data;
+}

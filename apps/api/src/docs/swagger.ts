@@ -508,5 +508,111 @@ export const swaggerSpec = {
         },
       },
     },
+    // ==========================================
+    // PHASE 7: COORDINATION & COMMUNICATION
+    // ==========================================
+    '/api/v1/coordination/tasks': {
+      post: {
+        tags: ['Coordination & Communication'],
+        summary: 'Create a field response task from confirmed match or report',
+        security: [{ bearerAuth: [] }],
+        responses: { 201: { description: 'Task created and dispatched' } },
+      },
+      get: {
+        tags: ['Coordination & Communication'],
+        summary: 'List field tasks with status/assignee filters',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'List of tasks' } },
+      },
+    },
+    '/api/v1/coordination/tasks/{id}/status': {
+      patch: {
+        tags: ['Coordination & Communication'],
+        summary: 'Update task execution status (ASSIGNED -> EN_ROUTE -> ON_SITE -> DONE/FAILED)',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Task status updated and logged to case timeline' } },
+      },
+    },
+    '/api/v1/coordination/tasks/{id}/location': {
+      post: {
+        tags: ['Coordination & Communication'],
+        summary: 'Opt-in volunteer/team real-time location update while on task',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Live location recorded' } },
+      },
+    },
+    '/api/v1/coordination/tracking/live': {
+      get: {
+        tags: ['Coordination & Communication'],
+        summary: 'Get active opt-in volunteer locations for coordinator map',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Active field volunteer coordinates' } },
+      },
+    },
+    '/api/v1/coordination/cases/{reportId}/close': {
+      post: {
+        tags: ['Coordination & Communication'],
+        summary: 'Close case with mandatory closing note and reporter confirmation',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Case marked resolved' } },
+      },
+    },
+    '/api/v1/coordination/cases/{reportId}/reopen': {
+      post: {
+        tags: ['Coordination & Communication'],
+        summary: 'Reopen closed case with mandatory reason',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Case reopened to IN_PROGRESS' } },
+      },
+    },
+    '/api/v1/coordination/cases/{reportId}/chat': {
+      get: {
+        tags: ['Coordination & Communication'],
+        summary: 'Fetch team chat messages for case (responders and assigned providers only)',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Chat message history' } },
+      },
+      post: {
+        tags: ['Coordination & Communication'],
+        summary: 'Post team chat message (reporter private PII protected)',
+        security: [{ bearerAuth: [] }],
+        responses: { 201: { description: 'Message sent' } },
+      },
+    },
+    '/api/v1/coordination/broadcasts': {
+      get: {
+        tags: ['Coordination & Communication'],
+        summary: 'Public feed of active area-wide crisis advisories',
+        responses: { 200: { description: 'Active broadcasts' } },
+      },
+      post: {
+        tags: ['Coordination & Communication'],
+        summary: 'Publish area-wide broadcast advisory (Coordinators & Admins)',
+        security: [{ bearerAuth: [] }],
+        responses: { 201: { description: 'Broadcast alert published' } },
+      },
+    },
+    '/api/v1/coordination/escalations': {
+      get: {
+        tags: ['Coordination & Communication'],
+        summary: 'List active escalation alerts for stalled unverified or unmatched cases',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Escalation alerts' } },
+      },
+    },
+    '/api/v1/coordination/notifications/preferences': {
+      get: {
+        tags: ['Coordination & Communication'],
+        summary: 'Get authenticated user notification and quiet hours preferences',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'User preferences' } },
+      },
+      put: {
+        tags: ['Coordination & Communication'],
+        summary: 'Update notification channels and quiet hours schedule',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Preferences updated' } },
+      },
+    },
   },
 };

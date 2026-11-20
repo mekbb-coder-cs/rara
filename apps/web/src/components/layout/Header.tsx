@@ -16,6 +16,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import { BroadcastBanner } from './BroadcastBanner';
 
 export function Header() {
   const { t, locale, setLocale } = useI18n();
@@ -54,13 +55,16 @@ export function Header() {
     { href: '/report', label: t('nav.report'), primary: true },
     { href: '/map', label: t('nav.map') },
     { href: '/responder', label: t('nav.login') },
+    { href: '/tasks', label: 'Field Tasks' },
     { href: '/provider', label: t('nav.provider') || 'Aid Provider' },
     { href: '/coordinator', label: t('nav.coordinator') || 'Coordinator' },
     { href: '/track', label: t('nav.track') },
   ];
 
   return (
-    <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors">
+    <>
+      <BroadcastBanner />
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Brand / Logo */}
         <Link
@@ -209,5 +213,6 @@ export function Header() {
         </div>
       )}
     </header>
+    </>
   );
 }
